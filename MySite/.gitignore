@@ -1,0 +1,70 @@
+# .NET build output
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+*.psess
+*.dbmdl
+
+# IDE specific
+.idea/
+.vscode/
+*.code-workspace
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Rider
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# Web publish
+*.pubxml.user
+
+# Database
+*.mdf
+*.ldf
+*.mdf.lock
+
+# Logs
+logs/
+*.log
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# MacOS
+.DS_Store
+*.DS_Store
+
+# Application specific
+appsettings.Development.json
+appsettings.Production.json
+*.local.json
+
+# User secrets
+secrets.json
+*.pfx
+*.p12
+
+# Docker
+*.sh
+*.dockerignore
+
+# Backup files
+*.bak
+*.tmp

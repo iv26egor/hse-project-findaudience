@@ -1,0 +1,257 @@
+﻿@page "/profile"
+@layout EmptyLayout
+@rendermode InteractiveServer
+@using CourseProject.Parser.Models
+@using CourseProject.Parser.Services
+@inject NavigationManager Navigation
+@inject AuthService AuthService
+@inject UserService UserService
+@inject BookingService BookingService
+
+<PageTitle>Профиль - НИУ ВШЭ Пермь</PageTitle>
+
+<div class="navbar">
+    <div class="logo-container">
+        <img src="/images/logo.jpg" alt="Логотип НИУ ВШЭ" class="main-logo">
+    </div>
+
+    <div class="header-right">
+        <button class="schedule-btn" @onclick="GoToSchedule">Расписание</button>
+        <div class="profile-btn" @onclick="GoToProfile">
+            <i class="fas fa-user-circle"></i> @(currentUser?.FirstName ?? "Профиль")
+        </div>
+    </div>
+</div>
+
+<main class="profile-container">
+    @if (isLoading)
+    {
+        <div class="loading-spinner">Загрузка данных пользователя...</div>
+    }
+    else if (currentUser == null)
+    {
+        <div class="no-results">
+            <p>Не удалось загрузить данные пользователя</p>
+            <button class="apply-btn" @onclick="GoToLogin">Вернуться на страницу входа</button>
+        </div>
+    }
+    else
+    {
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h2 class="profile-name">@currentUser.FirstName @currentUser.LastName</h2>
+                <p class="profile-role">@(currentUser.Group == "0" ? "Преподаватель" : "Студент")</p>
+            </div>
+
+            <div class="profile-info">
+                <h3>Личная информация</h3>
+
+                <div class="info-row">
+                    <span class="info-label">Имя</span>
+                    <span class="info-value">@currentUser.FirstName</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Фамилия</span>
+                    <span class="info-value">@currentUser.LastName</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Отчество</span>
+                    <span class="info-value">@(string.IsNullOrEmpty(currentUser.MiddleName) ? "Не указано" : currentUser.MiddleName)</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Номер группы</span>
+                    <span class="info-value">@(currentUser.Group == "0" ? "Преподаватель" : currentUser.Group)</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Электронная почта</span>
+                    <span class="info-value">@currentUser.Email</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Дата регистрации</span>
+                    <span class="info-value">@currentUser.CreatedAt.ToString("dd.MM.yyyy")</span>
+                </div>
+            </div>
+
+            <div class="profile-bookings">
+                <h3>Мои бронирования</h3>
+
+                @if (isLoadingBookings)
+                {
+                    <div class="loading-spinner">Загрузка бронирований...</div>
+                }
+                else if (userBookings.Count == 0)
+                {
+                    <div class="no-bookings">
+                        <p>У вас пока нет бронирований</p>
+                        <button class="apply-btn" @onclick="GoToSchedule">Найти аудиторию</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="bookings-list">
+                        @foreach (var booking in userBookings)
+                        {
+                            <div class="booking-item">
+                                <div class="booking-info">
+                                    <div class="booking-room">
+                                        <strong>Аудитория @booking.Auditorium?.RoomNumber</strong>
+                                        <span class="booking-building">(корпус @booking.Auditorium?.Building)</span>
+                                    </div>
+                                    <div class="booking-datetime">
+                                        <span>📅 @booking.BookingDate.ToString("dd.MM.yyyy")</span>
+                                        <span>🕐 @booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")</span>
+                                    </div>
+                                    <div class="booking-status @(booking.Status == "active" ? "status-active" : "status-cancelled")">
+                                        @(booking.Status == "active" ? "Активно" : "Отменено")
+                                    </div>
+                                </div>
+                                @if (booking.Status == "active" && booking.BookingDate >= DateTime.Today)
+                                {
+                                    <div class="booking-actions">
+                                        <button class="cancel-booking-btn" @onclick="() => CancelBooking(booking.Id)">Отменить</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="profile-actions">
+                <button class="logout-btn" @onclick="Logout">Выйти из аккаунта</button>
+            </div>
+        </div>
+    }
+</main>
+
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="notification @(notificationIsError ? "error" : "success")">
+        @notificationMessage
+        <button class="close-notification" @onclick="CloseNotification">×</button>
+    </div>
+}
+
+@code {
+    private CourseProject.Parser.Models.User? currentUser = null;
+    private List<Booking> userBookings = new List<Booking>();
+    private bool isLoading = true;
+    private bool isLoadingBookings = false;
+    private string notificationMessage = "";
+    private bool notificationIsError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+        await LoadUserBookings();
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            var userId = await AuthService.GetCurrentUserIdAsync();
+
+            if (userId > 0)
+            {
+                currentUser = await UserService.GetUserByIdAsync(userId);
+            }
+            else
+            {
+                Navigation.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка загрузки данных пользователя: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadUserBookings()
+    {
+        isLoadingBookings = true;
+        try
+        {
+            if (currentUser != null)
+            {
+                userBookings = await BookingService.GetUserBookingsAsync(currentUser.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка загрузки бронирований: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoadingBookings = false;
+        }
+    }
+
+    private async Task CancelBooking(int bookingId)
+    {
+        if (currentUser == null) return;
+
+        var result = await BookingService.CancelBookingAsync(bookingId, currentUser.Id);
+
+        if (result.success)
+        {
+            ShowNotification(result.message, false);
+            await LoadUserBookings();
+        }
+        else
+        {
+            ShowNotification(result.message, true);
+        }
+    }
+
+    private void GoToSchedule()
+    {
+        Navigation.NavigateTo("/schedule");
+    }
+
+    private void GoToProfile()
+    {
+        Navigation.NavigateTo("/profile");
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    private void CloseNotification()
+    {
+        notificationMessage = "";
+        StateHasChanged();
+    }
+
+    private void ShowNotification(string message, bool isError)
+    {
+        notificationMessage = message;
+        notificationIsError = isError;
+
+        _ = Task.Delay(5000).ContinueWith(_ =>
+        {
+            notificationMessage = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}

@@ -1,0 +1,18 @@
+﻿@rendermode InteractiveServer
+
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.EmptyLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Страница не найдена</PageTitle>
+        <LayoutView Layout="typeof(Layout.EmptyLayout)">
+            <div style="text-align: center; margin-top: 100px;">
+                <h1>404</h1>
+                <p>Страница не найдена</p>
+                <a href="/login">Вернуться на главную</a>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

@@ -1,0 +1,453 @@
+﻿@page "/schedule"
+@layout EmptyLayout
+@rendermode InteractiveServer
+@using CourseProject.Parser.Models
+@using CourseProject.Parser.Services
+@inject NavigationManager Navigation
+@inject AuditoriumService AuditoriumService
+@inject BookingService BookingService
+@inject AuthService AuthService
+
+<PageTitle>Поиск аудиторий - НИУ ВШЭ Пермь</PageTitle>
+
+<div class="navbar">
+    <div class="logo-container">
+        <img src="/images/logo.jpg" alt="Логотип НИУ ВШЭ" class="main-logo">
+    </div>
+
+    <div class="header-right">
+        <button class="help-btn" @onclick="ToggleHelp">Помощь</button>
+        <div class="profile-btn" @onclick="GoToProfile">
+            <i class="fas fa-user-circle"></i>Профиль
+        </div>
+    </div>
+</div>
+
+@if (showHelp)
+{
+    <div class="help-overlay show">
+        <div class="help-content">
+            <img src="/images/help_schedule-1.jpg" alt="Справка по интерфейсу" class="help-img">
+            <img src="/images/help-schedule-2.jpg" alt="Пояснения к полям" class="help-img">
+            <button class="close-help-btn" @onclick="ToggleHelp">Закрыть</button>
+        </div>
+    </div>
+}
+
+@if (showBookingModal && selectedAuditorium != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3>Бронирование аудитории №@selectedAuditorium.RoomNumber</h3>
+            <div class="room-info">
+                <p>Корпус: @selectedAuditorium.Building</p>
+                <p>Вместимость: @selectedAuditorium.Capacity чел.</p>
+                <p>Компьютеры: @(selectedAuditorium.HasComputers ? "есть" : "нет")</p>
+                <p>Проектор: @(selectedAuditorium.HasProjector ? "есть" : "нет")</p>
+            </div>
+
+            <div class="modal-field">
+                <label for="modalDate">Дата</label>
+                <input type="date" id="modalDate" value="@modalBookingDate" min="@minDate" @onchange="@((ChangeEventArgs e) => modalBookingDate = e.Value?.ToString() ?? DateTime.Today.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <div class="modal-field">
+                <label for="modalStartTime">Время начала</label>
+                <input type="time" id="modalStartTime" value="@modalStartTime" step="60" @onchange="@((ChangeEventArgs e) => modalStartTime = e.Value?.ToString() ?? "10:00")" />
+            </div>
+
+            <div class="modal-field">
+                <label for="modalEndTime">Время конца</label>
+                <input type="time" id="modalEndTime" value="@modalEndTime" step="60" @onchange="@((ChangeEventArgs e) => modalEndTime = e.Value?.ToString() ?? "12:00")" />
+            </div>
+
+            @if (timeValidationError)
+            {
+                <div class="time-warning">@timeValidationErrorMessage</div>
+            }
+
+            <div class="modal-buttons">
+                <button class="confirm-btn" @onclick="ConfirmBooking" disabled="@isBookingConfirm">@(isBookingConfirm ? "Бронирование..." : "Забронировать")</button>
+                <button class="cancel-btn" @onclick="CloseBookingModal">Отмена</button>
+            </div>
+        </div>
+    </div>
+}
+
+<section class="filters-section">
+    <div class="filters-container">
+        <div class="filter-item">
+            <label for="building">Корпус</label>
+            <select id="building" @bind="selectedBuilding">
+                <option value="">Все корпуса</option>
+                @foreach (var building in buildings)
+                {
+                    <option value="@building">Корпус @building</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="capacity">Вместимость</label>
+            <select id="capacity" @bind="selectedCapacityRange">
+                <option value="">Любая</option>
+                <option value="0-20">До 20</option>
+                <option value="20-50">20-50</option>
+                <option value="50-100">50-100</option>
+                <option value="100-999">100+</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="hasComputers">Компьютеры</label>
+            <select id="hasComputers" @bind="selectedHasComputers">
+                <option value="">Не важно</option>
+                <option value="true">Есть компьютеры</option>
+                <option value="false">Нет компьютеров</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="hasProjector">Проектор</label>
+            <select id="hasProjector" @bind="selectedHasProjector">
+                <option value="">Не важно</option>
+                <option value="true">Есть проектор</option>
+                <option value="false">Нет проектора</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="date">Дата</label>
+            <input type="date" id="date" value="@selectedDate" min="@minDate" @onchange="@((ChangeEventArgs e) => selectedDate = e.Value?.ToString() ?? DateTime.Today.ToString("yyyy-MM-dd"))" />
+        </div>
+
+        <div class="filter-item">
+            <label for="start_time">Время начала</label>
+            <input type="time" id="start_time" value="@selectedStartTime" @onchange="@((ChangeEventArgs e) => selectedStartTime = e.Value?.ToString() ?? "09:00")" />
+        </div>
+
+        <div class="filter-item">
+            <label for="end_time">Время конца</label>
+            <input type="time" id="end_time" value="@selectedEndTime" @onchange="@((ChangeEventArgs e) => selectedEndTime = e.Value?.ToString() ?? "17:00")" />
+        </div>
+
+        <div class="filter-action">
+            <button class="apply-btn" @onclick="ApplyFilters" disabled="@isLoading">Применить</button>
+        </div>
+    </div>
+</section>
+
+<main class="rooms-grid-container">
+    @if (isLoading)
+    {
+        <div class="loading-spinner">Загрузка аудиторий...</div>
+    }
+    else if (freeAuditoriums.Count == 0)
+    {
+        <div class="no-results">
+            <p>Свободных аудиторий, соответствующих фильтрам, не найдено</p>
+            <p>Попробуйте изменить параметры поиска</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var auditorium in freeAuditoriums)
+        {
+            <div class="auditorium-card">
+                <div class="card-header">
+                    <span class="card-building">Корпус @auditorium.Building</span>
+                    <span class="card-room">Аудитория @auditorium.RoomNumber</span>
+                </div>
+                <div class="card-body">
+                    <p>Вместимость: <strong>@auditorium.Capacity</strong> человек</p>
+                    <p>Компьютеры: <strong>@(auditorium.HasComputers ? "есть" : "нет")</strong></p>
+                    <p>Проектор: <strong>@(auditorium.HasProjector ? "есть" : "нет")</strong></p>
+                </div>
+                <div class="card-footer">
+                    <button class="book-btn" @onclick="() => OpenBookingModal(auditorium)" disabled="@isBooking">
+                        Забронировать
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</main>
+
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="notification @(notificationIsError ? "error" : "success")">
+        @notificationMessage
+        <button class="close-notification" @onclick="CloseNotification">×</button>
+    </div>
+}
+
+@code {
+    private List<Auditorium> freeAuditoriums = new List<Auditorium>();
+    private List<string> buildings = new List<string>();
+    private bool isLoading = true;
+    private bool isBooking = false;
+    private bool showHelp = false;
+    private string notificationMessage = "";
+    private bool notificationIsError = false;
+    private int currentUserId = 0;
+
+    private string selectedBuilding = "";
+    private string selectedCapacityRange = "";
+    private string selectedHasComputers = "";
+    private string selectedHasProjector = "";
+    private string selectedDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private string selectedStartTime = "08:00";
+    private string selectedEndTime = "09:00";
+
+    private string minDate = DateTime.Today.ToString("yyyy-MM-dd");
+
+    private bool showBookingModal = false;
+    private Auditorium? selectedAuditorium = null;
+    private string modalBookingDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private string modalStartTime = "08:00";
+    private string modalEndTime = "09:00";
+    private bool isBookingConfirm = false;
+    private bool timeValidationError = false;
+    private string timeValidationErrorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUserId = await AuthService.GetCurrentUserIdAsync();
+
+        if (currentUserId == 0)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadBuildings();
+        await ApplyFilters();
+    }
+
+    private async Task LoadBuildings()
+    {
+        try
+        {
+            buildings = await AuditoriumService.GetUniqueBuildingsAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка загрузки корпусов: {ex.Message}", true);
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        isLoading = true;
+
+        try
+        {
+            int? minCapacity = null;
+            int? maxCapacity = null;
+            if (!string.IsNullOrEmpty(selectedCapacityRange))
+            {
+                var parts = selectedCapacityRange.Split('-');
+                if (parts.Length == 2)
+                {
+                    minCapacity = int.Parse(parts[0]);
+                    maxCapacity = int.Parse(parts[1]);
+                }
+            }
+
+            bool? hasComputers = null;
+            if (!string.IsNullOrEmpty(selectedHasComputers))
+            {
+                hasComputers = bool.Parse(selectedHasComputers);
+            }
+
+            bool? hasProjector = null;
+            if (!string.IsNullOrEmpty(selectedHasProjector))
+            {
+                hasProjector = bool.Parse(selectedHasProjector);
+            }
+
+            if (string.IsNullOrEmpty(selectedDate))
+            {
+                selectedDate = DateTime.Today.ToString("yyyy-MM-dd");
+            }
+            var parsedDate = DateTime.Parse(selectedDate);
+
+            if (string.IsNullOrEmpty(selectedStartTime))
+            {
+                selectedStartTime = "08:00";
+            }
+            var parsedStartTime = TimeSpan.Parse(selectedStartTime);
+
+            if (string.IsNullOrEmpty(selectedEndTime))
+            {
+                selectedEndTime = "09:00";
+            }
+            var parsedEndTime = TimeSpan.Parse(selectedEndTime);
+
+            if (parsedStartTime >= parsedEndTime)
+            {
+                ShowNotification("Время начала должно быть меньше времени окончания", true);
+                return;
+            }
+
+            var buildingForFilter = string.IsNullOrEmpty(selectedBuilding) ? null : selectedBuilding;
+
+            freeAuditoriums = await AuditoriumService.GetFreeAuditoriumsAsync(
+                buildingForFilter,
+                minCapacity,
+                maxCapacity,
+                hasComputers,
+                hasProjector,
+                parsedDate,
+                parsedStartTime,
+                parsedEndTime);
+
+            if (freeAuditoriums.Count > 0)
+            {
+                ShowNotification($"Найдено свободных аудиторий: {freeAuditoriums.Count}", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка при применении фильтров: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenBookingModal(Auditorium auditorium)
+    {
+        selectedAuditorium = auditorium;
+        modalBookingDate = selectedDate;
+        modalStartTime = selectedStartTime;
+        modalEndTime = selectedEndTime;
+        showBookingModal = true;
+        timeValidationError = false;
+        StateHasChanged();
+    }
+
+    private void CloseBookingModal()
+    {
+        showBookingModal = false;
+        selectedAuditorium = null;
+        timeValidationError = false;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmBooking()
+    {
+        if (selectedAuditorium == null) return;
+
+        if (string.IsNullOrEmpty(modalBookingDate))
+        {
+            timeValidationError = true;
+            timeValidationErrorMessage = "Выберите дату бронирования";
+            return;
+        }
+
+        var parsedDate = DateTime.Parse(modalBookingDate);
+        if (parsedDate.Date < DateTime.Today)
+        {
+            timeValidationError = true;
+            timeValidationErrorMessage = "Нельзя бронировать аудиторию на прошедшую дату";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(modalStartTime) || string.IsNullOrEmpty(modalEndTime))
+        {
+            timeValidationError = true;
+            timeValidationErrorMessage = "Заполните время начала и окончания";
+            return;
+        }
+
+        var parsedStartTime = TimeSpan.Parse(modalStartTime);
+        var parsedEndTime = TimeSpan.Parse(modalEndTime);
+
+        if (parsedStartTime >= parsedEndTime)
+        {
+            timeValidationError = true;
+            timeValidationErrorMessage = "Время начала должно быть меньше времени окончания";
+            return;
+        }
+
+        if ((parsedEndTime - parsedStartTime).TotalHours > 4)
+        {
+            timeValidationError = true;
+            timeValidationErrorMessage = "Максимальная длительность бронирования - 4 часа";
+            return;
+        }
+
+        if (parsedDate.Date == DateTime.Today)
+        {
+            var now = DateTime.Now.TimeOfDay;
+            if (parsedStartTime < now)
+            {
+                timeValidationError = true;
+                timeValidationErrorMessage = "Время начала не может быть в прошлом";
+                return;
+            }
+        }
+
+        timeValidationError = false;
+        isBookingConfirm = true;
+
+        try
+        {
+            var result = await BookingService.CreateBookingAsync(
+                selectedAuditorium.Id,
+                currentUserId,
+                parsedDate,
+                parsedStartTime,
+                parsedEndTime);
+
+            if (result.success)
+            {
+                ShowNotification($"Аудитория {selectedAuditorium.RoomNumber} (корпус {selectedAuditorium.Building}) успешно забронирована", false);
+                CloseBookingModal();
+                await ApplyFilters();
+            }
+            else
+            {
+                ShowNotification(result.message, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка при бронировании: {ex.Message}", true);
+        }
+        finally
+        {
+            isBookingConfirm = false;
+        }
+    }
+
+    private void ToggleHelp()
+    {
+        showHelp = !showHelp;
+    }
+
+    private void GoToProfile()
+    {
+        Navigation.NavigateTo("/profile");
+    }
+
+    private void CloseNotification()
+    {
+        notificationMessage = "";
+        StateHasChanged();
+    }
+
+    private void ShowNotification(string message, bool isError)
+    {
+        notificationMessage = message;
+        notificationIsError = isError;
+
+        _ = Task.Delay(5000).ContinueWith(_ =>
+        {
+            notificationMessage = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}

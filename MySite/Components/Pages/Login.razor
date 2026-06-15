@@ -1,0 +1,139 @@
+﻿@page "/login"
+@layout EmptyLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using CourseProject.Parser.Services
+@inject NavigationManager Navigation
+@inject AuthService AuthService
+
+<PageTitle>Вход в систему НИУ ВШЭ - Пермь</PageTitle>
+
+<div class="navbar">
+    <div class="logo-container">
+        <img src="/images/logo.jpg" alt="Логотип НИУ ВШЭ" class="main-logo">
+    </div>
+
+    <div class="help-container">
+        <button class="help-btn" @onclick="ToggleHelp">Помощь</button>
+        @if (showHelp)
+        {
+            <div class="help-overlay show">
+                <div class="help-content">
+                    <img src="/images/help_1.jpg" alt="Справка по интерфейсу" class="help-img">
+                    <img src="/images/help_2.jpg" alt="Пояснения к полям" class="help-img">
+                    <button class="close-help-btn" @onclick="ToggleHelp">Закрыть</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<main class="login-container">
+    <h1 class="header-title">НИУ ВШЭ - Пермь</h1>
+    <p class="subtitle">Поиск свободной аудитории</p>
+
+    <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin" class="login-form">
+        <div class="input-group">
+            <label for="email">Логин (E-mail)</label>
+            <InputText id="email" @bind-Value="loginModel.Email" placeholder="Ваша корпоративная почта" />
+        </div>
+
+        <div class="input-group">
+            <label for="password">Пароль</label>
+            <InputText id="password" type="password" @bind-Value="loginModel.Password" placeholder="Ваш пароль" />
+        </div>
+
+        <button type="submit" class="submit-btn" disabled="@isLoading">
+            @(isLoading ? "Вход..." : "Войти")
+        </button>
+    </EditForm>
+
+    <div class="register-link">
+        <span>Нет аккаунта? </span>
+        <NavLink href="/register">Зарегистрироваться</NavLink>
+    </div>
+</main>
+
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="notification @(notificationIsError ? "error" : "success")">
+        @notificationMessage
+        <button class="close-notification" @onclick="CloseNotification">×</button>
+    </div>
+}
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private bool isLoading = false;
+    private bool showHelp = false;
+    private string notificationMessage = "";
+    private bool notificationIsError = false;
+
+    private void ToggleHelp()
+    {
+        showHelp = !showHelp;
+    }
+
+    private void CloseNotification()
+    {
+        notificationMessage = "";
+        StateHasChanged();
+    }
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(loginModel.Email))
+        {
+            ShowNotification("Введите email", true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(loginModel.Password))
+        {
+            ShowNotification("Введите пароль", true);
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(loginModel.Email, loginModel.Password);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/schedule");
+            }
+            else
+            {
+                ShowNotification("Неверный email или пароль", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка входа: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowNotification(string message, bool isError)
+    {
+        notificationMessage = message;
+        notificationIsError = isError;
+
+        _ = Task.Delay(5000).ContinueWith(_ =>
+        {
+            notificationMessage = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private class LoginModel
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

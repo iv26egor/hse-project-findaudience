@@ -1,0 +1,196 @@
+﻿@page "/register"
+@layout EmptyLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using CourseProject.Parser.Services
+@inject NavigationManager Navigation
+@inject UserService UserService
+
+<PageTitle>Регистрация - НИУ ВШЭ Пермь</PageTitle>
+
+<div class="navbar">
+    <div class="logo-container">
+        <img src="/images/logo.jpg" alt="Логотип НИУ ВШЭ" class="main-logo">
+    </div>
+
+    <div class="help-container">
+        <button class="help-btn" @onclick="ToggleHelp">Помощь</button>
+
+        @if (showHelp)
+        {
+            <div class="help-overlay show">
+                <div class="help-content">
+                    <img src="/images/help_register-1.jpg" alt="Справка по регистрации" class="help-img">
+                    <img src="/images/help_register-2.jpg" alt="Пояснения к полям" class="help-img">
+                    <button class="close-help-btn" @onclick="ToggleHelp">Закрыть</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<main class="login-container">
+    <h1 class="header-title">НИУ ВШЭ - Пермь</h1>
+    <p class="subtitle">Регистрация</p>
+
+    <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" class="login-form">
+        <div class="input-group">
+            <label for="firstname">Имя</label>
+            <InputText id="firstname" @bind-Value="registerModel.FirstName" placeholder="Ваше имя" />
+        </div>
+
+        <div class="input-group">
+            <label for="lastname">Фамилия</label>
+            <InputText id="lastname" @bind-Value="registerModel.LastName" placeholder="Ваша фамилия" />
+        </div>
+
+        <div class="input-group">
+            <label for="middlename">Отчество</label>
+            <InputText id="middlename" @bind-Value="registerModel.MiddleName" placeholder="Ваше отчество" />
+        </div>
+
+        <div class="input-group">
+            <label for="group">Группа (0 - если Вы преподаватель)</label>
+            <InputText id="group" @bind-Value="registerModel.Group" placeholder="Ваша группа" />
+        </div>
+
+        <div class="input-group">
+            <label for="email">Логин (E-mail)</label>
+            <InputText id="email" @bind-Value="registerModel.Email" placeholder="Ваша корпоративная почта" />
+        </div>
+
+        <div class="input-group">
+            <label for="password">Пароль</label>
+            <InputText id="password" type="password" @bind-Value="registerModel.Password" placeholder="Придумайте пароль" />
+        </div>
+
+        <button type="submit" class="submit-btn" disabled="@isLoading">
+            @(isLoading ? "Регистрация..." : "Зарегистрироваться")
+        </button>
+    </EditForm>
+
+    <div class="register-link">
+        <span>Уже есть аккаунт? </span>
+        <NavLink href="/login">Войти</NavLink>
+    </div>
+</main>
+
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="notification @(notificationIsError ? "error" : "success")">
+        @notificationMessage
+        <button class="close-notification" @onclick="CloseNotification">×</button>
+    </div>
+}
+
+@code {
+    private RegisterModel registerModel = new RegisterModel();
+    private bool isLoading = false;
+    private bool showHelp = false;
+    private string notificationMessage = "";
+    private bool notificationIsError = false;
+
+    private void ToggleHelp()
+    {
+        showHelp = !showHelp;
+    }
+
+    private void CloseNotification()
+    {
+        notificationMessage = "";
+        StateHasChanged();
+    }
+
+    private async Task HandleRegister()
+    {
+        if (string.IsNullOrWhiteSpace(registerModel.FirstName))
+        {
+            ShowNotification("Введите имя", true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(registerModel.LastName))
+        {
+            ShowNotification("Введите фамилию", true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(registerModel.Group))
+        {
+            ShowNotification("Введите номер группы (или 0 для преподавателя)", true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(registerModel.Email))
+        {
+            ShowNotification("Введите email", true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(registerModel.Password))
+        {
+            ShowNotification("Введите пароль", true);
+            return;
+        }
+
+        if (registerModel.Password.Length < 6)
+        {
+            ShowNotification("Пароль должен содержать не менее 6 символов", true);
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            var result = await UserService.RegisterUserAsync(
+                registerModel.FirstName,
+                registerModel.LastName,
+                string.IsNullOrWhiteSpace(registerModel.MiddleName) ? null : registerModel.MiddleName,
+                registerModel.Group,
+                registerModel.Email,
+                registerModel.Password);
+
+            if (result.success)
+            {
+                ShowNotification("Регистрация прошла успешно! Перенаправление на страницу входа...", false);
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                ShowNotification(result.message, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Ошибка регистрации: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowNotification(string message, bool isError)
+    {
+        notificationMessage = message;
+        notificationIsError = isError;
+
+        _ = Task.Delay(5000).ContinueWith(_ =>
+        {
+            notificationMessage = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private class RegisterModel
+    {
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string MiddleName { get; set; } = "";
+        public string Group { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="../CourseProject.Parser/CourseProject.Parser.csproj" />
+  <Project Path="MySite.csproj" />
+</Solution>

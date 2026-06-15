@@ -1,0 +1,705 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== НАВИГАЦИЯ ========== */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 40px;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.main-logo {
+    height: 40px;
+    width: auto;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.help-container {
+    position: relative;
+}
+
+.help-btn {
+    background-color: #1a4a82;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+    .help-btn:hover {
+        background-color: #13365e;
+    }
+
+.profile-btn {
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========== СПРАВКА (OVERLAY) ========== */
+
+.help-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    flex-direction: column;
+}
+
+    .help-overlay.show {
+        display: flex;
+    }
+
+.help-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+}
+
+.help-img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.close-help-btn {
+    margin-top: 15px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* ========== ФОРМЫ (LOGIN / REGISTER) ========== */
+
+.login-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.header-title {
+    color: #1a4a82;
+    font-size: 32px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.subtitle {
+    color: #333;
+    font-size: 18px;
+    margin-bottom: 40px;
+    font-weight: 400;
+}
+
+.login-form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 16px;
+        border: 1px solid #7a7a7a;
+        border-radius: 5px;
+        box-sizing: border-box;
+        outline: none;
+    }
+
+        .input-group input:focus {
+            border-color: #1a4a82;
+            box-shadow: 0 0 0 2px rgba(26, 74, 130, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: #999;
+        }
+
+.submit-btn {
+    width: 100%;
+    background-color: #1a4a82;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+    .submit-btn:hover {
+        background-color: #13365e;
+    }
+
+    .submit-btn:disabled {
+        background-color: #6c8fb0;
+        cursor: not-allowed;
+    }
+
+.register-link {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #555;
+}
+
+    .register-link a {
+        color: #1a4a82;
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+    }
+
+        .register-link a:hover {
+            border-bottom: 1px solid #1a4a82;
+        }
+
+/* ========== ФИЛЬТРЫ ========== */
+
+.filters-section {
+    background-color: #e6e6e6;
+    padding: 20px 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+}
+
+    .filter-item label {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .filter-item select,
+    .filter-item input {
+        padding: 8px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        background: white;
+        min-width: 100px;
+    }
+
+.apply-btn {
+    background-color: #1a4a82;
+    color: white;
+    border: none;
+    padding: 8px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    height: 38px;
+}
+
+    .apply-btn:hover {
+        background-color: #143b69;
+    }
+
+    .apply-btn:disabled {
+        background-color: #6c8fb0;
+        cursor: not-allowed;
+    }
+
+/* ========== СЕТКА КАРТОЧЕК ========== */
+
+.rooms-grid-container {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.auditorium-card {
+    background-color: #e2e2e2;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #1a4a82;
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-building {
+    font-weight: bold;
+}
+
+.card-room {
+    font-weight: bold;
+}
+
+.card-body {
+    padding: 15px;
+    flex-grow: 1;
+    color: #1a4a82;
+}
+
+    .card-body p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+.card-footer {
+    padding: 15px;
+    text-align: center;
+}
+
+.book-btn {
+    background-color: #1a4a82;
+    color: white;
+    border: none;
+    padding: 10px 0;
+    width: 100%;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+    .book-btn:hover {
+        background-color: #143b69;
+    }
+
+    .book-btn:disabled {
+        background-color: #6c8fb0;
+        cursor: not-allowed;
+    }
+
+/* ========== СОСТОЯНИЯ ========== */
+
+.no-results {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+    color: #666;
+    grid-column: 1 / -1;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 50px;
+    grid-column: 1 / -1;
+}
+
+/* ========== УВЕДОМЛЕНИЯ ========== */
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    color: white;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: slideIn 0.3s ease-out;
+}
+
+    .notification.success {
+        background-color: #28a745;
+    }
+
+    .notification.error {
+        background-color: #dc3545;
+    }
+
+.close-notification {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ========== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+    .modal-content h3 {
+        color: #1a4a82;
+        margin-bottom: 10px;
+    }
+
+    .modal-content .room-info {
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+        .modal-content .room-info p {
+            margin: 5px 0;
+        }
+
+.modal-field {
+    margin-bottom: 15px;
+}
+
+    .modal-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .modal-field input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+    .modal-buttons button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+.confirm-btn {
+    background-color: #1a4a82;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.time-warning {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.schedule-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+    .schedule-btn:hover {
+        background-color: #218838;
+    }
+
+.profile-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    background-color: #f5f5f5;
+}
+
+.profile-card {
+    max-width: 800px;
+    width: 100%;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #1a4a82 0%, #0d2b4a 100%);
+    color: white;
+    text-align: center;
+    padding: 30px;
+}
+
+.profile-avatar {
+    font-size: 80px;
+    margin-bottom: 15px;
+}
+
+    .profile-avatar i {
+        font-size: 80px;
+    }
+
+.profile-name {
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.profile-role {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.profile-info {
+    padding: 25px 30px;
+    border-bottom: 1px solid #eee;
+}
+
+    .profile-info h3 {
+        color: #1a4a82;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+.info-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-label {
+    width: 150px;
+    font-weight: 600;
+    color: #555;
+}
+
+.info-value {
+    flex: 1;
+    color: #333;
+}
+
+.profile-bookings {
+    padding: 25px 30px;
+    border-bottom: 1px solid #eee;
+}
+
+    .profile-bookings h3 {
+        color: #1a4a82;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.booking-item {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.booking-info {
+    flex: 1;
+}
+
+.booking-room {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.booking-building {
+    font-size: 14px;
+    color: #666;
+    margin-left: 8px;
+}
+
+.booking-datetime {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.booking-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cancel-booking-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .cancel-booking-btn:hover {
+        background-color: #c82333;
+    }
+
+.no-bookings {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+}
+
+    .no-bookings button {
+        margin-top: 15px;
+    }
+
+.profile-actions {
+    padding: 25px 30px;
+    text-align: center;
+}
+
+.logout-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+    .logout-btn:hover {
+        background-color: #5a6268;
+    }
