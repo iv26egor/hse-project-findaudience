@@ -13,8 +13,6 @@ body {
     flex-direction: column;
 }
 
-/* ========== НАВИГАЦИЯ ========== */
-
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -67,8 +65,6 @@ body {
     gap: 8px;
 }
 
-/* ========== СПРАВКА (OVERLAY) ========== */
-
 .help-overlay {
     position: fixed;
     top: 0;
@@ -114,8 +110,6 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
-
-/* ========== ФОРМЫ (LOGIN / REGISTER) ========== */
 
 .login-container {
     flex-grow: 1;
@@ -216,8 +210,6 @@ body {
             border-bottom: 1px solid #1a4a82;
         }
 
-/* ========== ФИЛЬТРЫ ========== */
-
 .filters-section {
     background-color: #e6e6e6;
     padding: 20px 40px;
@@ -274,8 +266,6 @@ body {
         background-color: #6c8fb0;
         cursor: not-allowed;
     }
-
-/* ========== СЕТКА КАРТОЧЕК ========== */
 
 .rooms-grid-container {
     padding: 30px;
@@ -348,8 +338,6 @@ body {
         cursor: not-allowed;
     }
 
-/* ========== СОСТОЯНИЯ ========== */
-
 .no-results {
     text-align: center;
     padding: 50px;
@@ -363,8 +351,6 @@ body {
     padding: 50px;
     grid-column: 1 / -1;
 }
-
-/* ========== УВЕДОМЛЕНИЯ ========== */
 
 .notification {
     position: fixed;
@@ -408,8 +394,6 @@ body {
         opacity: 1;
     }
 }
-
-/* ========== МОДАЛЬНОЕ ОКНО ========== */
 
 .modal-overlay {
     position: fixed;
