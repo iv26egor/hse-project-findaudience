@@ -34,6 +34,12 @@ namespace MySite
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddCascadingAuthenticationState();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await dbContext.Database.EnsureCreatedAsync();
+            }
+            
             var app = builder.Build();
 
             if (!app.Environment.IsDevelopment())
