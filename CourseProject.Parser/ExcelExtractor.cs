@@ -1,4 +1,4 @@
-﻿using NPOI.HSSF.UserModel;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using System.Text.RegularExpressions;
@@ -82,11 +82,6 @@ namespace CourseProject.Parser
                         if (pairMatch.Success)
                             currentPair = int.Parse(pairMatch.Groups[1].Value);
                     }
-
-                    // пропускаем колонки c-f (служебная информация)
-                    if (colIdx <= 5) continue;
-                    // пропускаем колонки дальше o (последняя группа)
-                    if (colIdx > 14) break;
 
                     // если в ячейке есть занятие
                     if (!string.IsNullOrEmpty(cellValue) && !string.IsNullOrEmpty(currentDay) && currentPair > 0)
