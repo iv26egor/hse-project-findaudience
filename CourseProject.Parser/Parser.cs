@@ -146,7 +146,7 @@ namespace CourseProject.Parser
                     Console.WriteLine($"ошибка: {ex.Message}");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(300), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(86400), cancellationToken);
             }
         }
     }
